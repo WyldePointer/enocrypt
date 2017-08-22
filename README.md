@@ -154,7 +154,7 @@ Decryption of the files are done using the **PRIVATE KEY** and should be only
  is responsible for this task and it takes 3 arguments:
 
 ```sh
-$ eno_decrypt.sh safe_dir encrypted_files_dir private_key
+$ ./eno_decrypt.sh safe_dir encrypted_files_dir private_key
 ```
 
  - `safe_dir` is where you're going to store the decrypted file.
