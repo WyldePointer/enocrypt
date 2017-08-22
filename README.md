@@ -71,7 +71,7 @@ All files and directories except the `public.pem` are only readable for you
  (the user who runs the script) and you must always keep in mind that your
  private key(`private.pem`) **SHOULD NEVER**, I repeat, **NEVER EVER**:
 
- - Having a permission rather than `400`. (or `-r--------` if you prefer)
+ - Having a permission other than `400`. (or `-r--------` if you prefer)
 
  - Being owned by another user. (UNIX system users)
 
