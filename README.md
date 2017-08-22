@@ -50,7 +50,8 @@ writing RSA key
 And if everything going on as expected, you must see a message similar to:
 
 ```sh
-[DONE] The key pair has been stored in '/safe/dir/8f4c5457/'.
+[DONE] The key pair has been generated successfully and stored in:
+/safe/dir/8f4c5457/
 ```
 
 After running this script, you'll have a directory with a structure similar to:
