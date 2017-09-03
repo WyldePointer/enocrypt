@@ -27,7 +27,6 @@ checksum_store_error=0
 os_type=`uname -s`
 
 if [ "$os_type" = "OpenBSD" ]; then
-  os_type='bsd'
   file_hashing_command="sha256"
 fi
 
