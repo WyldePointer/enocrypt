@@ -24,6 +24,12 @@ original_file_hash=''
 encrypted_file_hash=''
 encrypted_file_path_and_name=''
 checksum_store_error=0
+os_type=`uname -s`
+
+if [ "$os_type" = "OpenBSD" ]; then
+  os_type='bsd'
+  file_hashing_command="sha256"
+fi
 
 if [ $# -lt 3 ]; then
   echo "Usage: $0 <filename> <destination-dir> <public-key>"
@@ -56,7 +62,7 @@ if [ ! -r $3 ]; then
 fi
 
 random_dir=` echo $($random_dir_name_source) | $file_hashing_command |\
- awk '{print $1}' | head -c $random_dir_length`
+ awk '{print $1}' | awk '{print substr($1, 0, len)}' len=$random_dir_length`
 
 mkdir $2/$random_dir
 
@@ -69,9 +75,12 @@ random_key=`openssl rand -hex $random_key_number_of_bytes`
 
 echo "Your file is going to be encrypted. It may take a while.."
 
-original_file_hash=`$file_hashing_command $1 | awk '{print $1}'`
-
-checksums="$original_file_hash `basename $1`"
+if [ "$os_type" != "Linux" ]; then
+  checksums=`$file_hashing_command $1`
+else
+  original_file_hash=`$file_hashing_command $1 | awk '{print $1}'`
+  checksums="$original_file_hash `basename $1`"
+fi
 
 encrypted_file_path_and_name=$2/$random_dir/`basename $1`\
 $encrypted_file_extension
@@ -84,11 +93,16 @@ if [ $? != 0 ]; then
   exit 8
 fi
 
-encrypted_file_hash=`$file_hashing_command $encrypted_file_path_and_name |\
- awk '{print $1}'`
 
-checksums="$checksums \n$encrypted_file_hash\
+if [ $os_type != "Linux" ]; then
+  encrypted_file_hash=`$file_hashing_command $encrypted_file_path_and_name`
+  checksums="$checksums\n$encrypted_file_hash"
+else
+  encrypted_file_hash=`$file_hashing_command $encrypted_file_path_and_name |\
+    awk '{print $1}'`
+  checksums="$checksums \n$encrypted_file_hash\
  `basename $1$encrypted_file_extension`"
+fi
 
 ## TODO: Alternative method. Must be POSIX-friendly and portable.
 export __random_key=$random_key

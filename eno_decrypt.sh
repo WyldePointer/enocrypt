@@ -19,6 +19,11 @@ original_file_hash=''
 encrypted_file_hash=''
 original_file_name=''
 encrypted_file_name=''
+os_type=`uname -s`
+
+if [ "$os_type" = "OpenBSD" ]; then
+  file_hashing_command="sha256"
+fi
 
 if [ $# -lt 3 ]; then
   echo "Usage: $0 <safe-dir> <encrypted-files-dir> <private-key>"
@@ -78,13 +83,26 @@ if [ $? != 0 ]; then
   exit 10
 fi
 
-original_file_name=`echo "$checksums" | head -n 1 | awk '{print $2}'`
-original_file_hash=`echo "$checksums" | head -n 1 | awk '{print $1}'`
+if [ "$os_type" != "Linux" ]; then
+  original_file_hash=`printf "%s" "$checksums" | head -n 1`
+  original_file_name=`echo $original_file_hash | cut -f 1 -d')' |\
+    cut -f 2 -d'('`
 
-encrypted_file_name=`echo "$checksums" | tail -n 1 | awk '{print $2}'`
-encrypted_file_hash=`echo "$checksums" | tail -n 1 | awk '{print $1}'`
+  encrypted_file_hash=`printf "%s" "$checksums" | tail -n 1`
+  encrypted_file_name=`echo $encrypted_file_hash | cut -f 1 -d')' |\
+    cut -f 2 -d'('`
+  echo $encrypted_file_hash | $file_hashing_command -c
+else
+  original_file_name=`echo "$checksums" | head -n 1 | awk '{print $2}'`
+  original_file_hash=`echo "$checksums" | head -n 1 | awk '{print $1}'`
 
-echo "$encrypted_file_hash $2/$encrypted_file_name" | sha256sum -c
+  encrypted_file_name=`echo "$checksums" | tail -n 1 | awk '{print $2}'`
+  encrypted_file_hash=`echo "$checksums" | tail -n 1 | awk '{print $1}'`
+
+  echo "$encrypted_file_hash $2/`basename $encrypted_file_name`" |\
+    $file_hashing_command -c
+fi
+
 
 if [ $? != 0 ]; then
   echo "[ERROR] Checksum of the encrypted file seems to be incorrect."
@@ -92,14 +110,16 @@ if [ $? != 0 ]; then
 fi
 
 echo $random_key | openssl enc -d -$encryption_cipher\
- -in $2/$encrypted_file_name -out $1/$original_file_name -pass stdin
+ -in $2/`basename $encrypted_file_name` -out $1/`basename $original_file_name`\
+   -pass stdin
 
 if [ $? != 0 ]; then
   echo "[ERROR] An error occurred during decryption of the file."
   exit 12
 fi
 
-echo "$original_file_hash $1/$original_file_name" | sha256sum -c
+echo "$original_file_hash $1/`basename $original_file_name`" |\
+  $file_hashing_command -c
 
 if [ $? != 0 ]; then
   echo "[ERROR] Checksum of decrypted file does not match the original value."
@@ -107,7 +127,7 @@ if [ $? != 0 ]; then
 fi
 
 echo "[DONE] Your file has been successfully decrypted and stored at:"
-echo $1/$original_file_name
+echo $1/`basename $original_file_name`
 
 exit 0
 

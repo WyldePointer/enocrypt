@@ -8,6 +8,7 @@
 ## More: https://github.com/WyldePointer/enocrypt
 
 rsa_bits=2048
+file_hashing_command="sha256sum"
 private_key_file_name="private"
 private_key_file_extension=".pem"
 public_key_file_name="public"
@@ -16,6 +17,11 @@ random_dir_name_source="date +%s%N"
 
 ## Internal variables. Do not change anything below.
 keys_dir=''
+os_type=`uname -s`
+
+if [ "$os_type" = "OpenBSD" ]; then
+  file_hashing_command="sha256"
+fi
 
 umask 077
 
@@ -35,7 +41,7 @@ if [ ! -w $1 ]; then
 fi
 
 keys_dir=` echo $($random_dir_name_source) |\
- sha256sum | cut -f 1 -d\ | head -c 8`
+ ${file_hashing_command} | cut -f 1 -d\ | awk '{print substr($1, 0, 8)}'`
 
 mkdir $1/$keys_dir
 
