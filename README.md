@@ -106,7 +106,7 @@ Whenever s/he is done encrypting the file, you must have received 3 different
 ## If you're a sender
 
 Assuming that you've received the public key of the recipient, all you need to
- do it running the `eno_encrypt.sh`:
+ do is running the `eno_encrypt.sh`:
 
 ```sh
 ./eno_encrypt.sh file_to_encrypt destination_directory public_key
